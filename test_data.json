@@ -1,0 +1,16 @@
+[
+  {
+    "url_pattern": "retro-blog",
+    "keyword_patterns": [
+      "foo",
+      "bar"
+    ]
+  },
+  {
+    "url_pattern": "21-century-blog",
+    "keyword_patterns": [
+      "foo",
+      "bar"
+    ]
+  }
+]

@@ -1,0 +1,23 @@
+name: Test Retroblog
+
+on: [push]
+
+jobs:
+  Lint-and-Test:
+    name: Lint-and-Test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        path: browser-automation
+    - name: Install packages
+      run: cd browser-automation && mkdir bin && cd bin && sudo apt install -y curl unzip build-essential python3
+    - name: Download chromdriver
+      run: cd browser-automation/bin && curl --output chromedriver.zip https://chromedriver.storage.googleapis.com/98.0.4758.102/chromedriver_linux64.zip
+    - name: Extract chromdriver
+      run: cd browser-automation/bin && unzip chromedriver.zip && rm chromedriver.zip
+    - name: Pylint
+      run: cd browser-automation && pip install -r requirements.txt ; python -m pylint $(find tests -name *.py)
+    - name: PyTest
+      run: cd browser-automation && pip install -r requirements.txt ; python -m pytest
