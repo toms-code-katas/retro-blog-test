@@ -2,8 +2,8 @@
   {
     "url_pattern": "kubectl edit command",
     "keyword_patterns": [
-      "Alternatively",
-      "helpful"
+      "kubectl edit",
+      "KUBE_EDITOR"
     ]
   }
 ]
