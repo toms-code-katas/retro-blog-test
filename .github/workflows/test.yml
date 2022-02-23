@@ -10,14 +10,14 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
       with:
-        path: browser-automation
+        path: retro-blog-test
     - name: Install packages
       run: cd browser-automation && mkdir bin && cd bin && sudo apt install -y curl unzip build-essential python3
     - name: Download chromdriver
       run: cd browser-automation/bin && curl --output chromedriver.zip https://chromedriver.storage.googleapis.com/98.0.4758.102/chromedriver_linux64.zip
     - name: Extract chromdriver
-      run: cd browser-automation/bin && unzip chromedriver.zip && rm chromedriver.zip
+      run: cd retro-blog-test/bin && unzip chromedriver.zip && rm chromedriver.zip
     - name: Pylint
-      run: cd browser-automation && pip install -r requirements.txt ; pylint --extension-pkg-whitelist='pydantic' --fail-under=4 ./tests/
+      run: cd retro-blog-test && pip install -r requirements.txt ; pylint --extension-pkg-whitelist='pydantic' --fail-under=4 ./tests/
     - name: PyTest
-      run: cd browser-automation && pip install -r requirements.txt ; python -m pytest
+      run: cd retro-blog-test && pip install -r requirements.txt ; python -m pytest ./tests/*.py
