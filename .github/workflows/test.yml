@@ -18,6 +18,6 @@ jobs:
     - name: Extract chromdriver
       run: cd browser-automation/bin && unzip chromedriver.zip && rm chromedriver.zip
     - name: Pylint
-      run: cd browser-automation && pip install -r requirements.txt ; python -m pylint $(find tests -name *.py)
+      run: cd browser-automation && pip install -r requirements.txt ; pylint --extension-pkg-whitelist='pydantic' --fail-under=4 ./tests/
     - name: PyTest
       run: cd browser-automation && pip install -r requirements.txt ; python -m pytest
