@@ -8,7 +8,11 @@ import pathlib
 from typing import List
 import unittest
 from pydantic import BaseModel
-from selenium.webdriver.remote.webdriver import WebDriver
+from selenium.webdriver.remote.webdriver import WebDriver, WebElement
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium import webdriver
 
 
 class BlogPost(BaseModel):
@@ -30,7 +34,12 @@ class BlogPostTester:
 
 
 def get_page_as_text(blog_post: BlogPost, web_driver: WebDriver):
-    pass
+    link = web_driver.find_element(By.LINK_TEXT, value=blog_post.url_pattern)
+    if not link:
+        raise Exception("Link not found")
+
+    link.click()
+    return web_driver.find_element(By.XPATH, value="/html/body").text
 
 
 class RetroBlogTest(unittest.TestCase):
@@ -47,10 +56,28 @@ class RetroBlogTest(unittest.TestCase):
         # Remove model metaclass added by pydantic
         cls.blog_posts.pop(0)
 
+        options = Options()
+        options.add_argument("--headless")
+        current_path = pathlib.Path(__file__).parent.resolve()
+        service = Service(executable_path=f"{current_path}/../bin/chromedriver")
+        cls.driver = webdriver.Chrome(options=options, service=service)
+        cls.driver.get("https://tom1299.github.io/retro-blog/post/k8s-hardly-readable-configmap/")
+
     def testTestData(self):
         blog_posts: List[BlogPost] = RetroBlogTest.blog_posts
         assert blog_posts
-        assert len(blog_posts) is 2
-        assert blog_posts[0].url_pattern == "retro-blog"
+        assert len(blog_posts) == 1
+        assert blog_posts[0].url_pattern == "kubectl edit command"
 
+    def testTestLinks(self):
+        for blog_post in RetroBlogTest.blog_posts:
+            page_text = get_page_as_text(blog_post, RetroBlogTest.driver)
+            for keyword_pattern in blog_post.keyword_patterns:
+                match_found = re.search(keyword_pattern, page_text)
+                if not match_found:
+                    raise Exception("Keyword not found")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.driver.close()
 

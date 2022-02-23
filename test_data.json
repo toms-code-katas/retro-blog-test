@@ -1,16 +1,9 @@
 [
   {
-    "url_pattern": "retro-blog",
+    "url_pattern": "kubectl edit command",
     "keyword_patterns": [
-      "foo",
-      "bar"
-    ]
-  },
-  {
-    "url_pattern": "21-century-blog",
-    "keyword_patterns": [
-      "foo",
-      "bar"
+      "Alternatively",
+      "helpful"
     ]
   }
 ]
