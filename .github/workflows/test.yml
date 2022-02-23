@@ -12,9 +12,9 @@ jobs:
       with:
         path: retro-blog-test
     - name: Install packages
-      run: cd browser-automation && mkdir bin && cd bin && sudo apt install -y curl unzip build-essential python3
+      run: cd retro-blog-test && mkdir bin && cd bin && sudo apt install -y curl unzip build-essential python3
     - name: Download chromdriver
-      run: cd browser-automation/bin && curl --output chromedriver.zip https://chromedriver.storage.googleapis.com/98.0.4758.102/chromedriver_linux64.zip
+      run: cd retro-blog-test/bin && curl --output chromedriver.zip https://chromedriver.storage.googleapis.com/98.0.4758.102/chromedriver_linux64.zip
     - name: Extract chromdriver
       run: cd retro-blog-test/bin && unzip chromedriver.zip && rm chromedriver.zip
     - name: Pylint
