@@ -15,9 +15,18 @@ from selenium.webdriver.common.by import By
 from selenium import webdriver
 
 
-class BlogPost(BaseModel):
-    url_pattern: str
+class Page(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+
+    link_text_pattern: str
     keyword_patterns: List[str]
+    link: WebElement = None
+
+
+class BlogPost(BaseModel):
+    url: str
+    pages: List[Page]
 
 
 class BlogPostTester:
@@ -33,14 +42,30 @@ class BlogPostTester:
         return patterns_not_found
 
 
-def get_page_as_text(blog_post: BlogPost, web_driver: WebDriver):
-    link = web_driver.find_element(By.LINK_TEXT, value=blog_post.url_pattern)
-    if not link:
-        raise Exception("Link not found")
+def verify_blog_post(blog_post: BlogPost, web_driver: WebDriver):
+    web_driver.get(blog_post.url)
+    pages_found: List[Page] = []
+    pages_not_found: List[Page] = []
+    for page in blog_post.pages:
+        link = web_driver.find_element(By.LINK_TEXT, value=page.link_text_pattern)
+        if not link:
+            pages_not_found[page]
+        else:
+            page.link = link
+            pages_found.append(page)
 
-    # click() might not work. See https://stackoverflow.com/a/52405269
-    web_driver.execute_script("arguments[0].click();", link)
-    return web_driver.find_element(By.XPATH, value="/html/body").text
+    keyword_pattern_not_found: List[str] = []
+    for page in pages_found:
+        # click() might not work. See https://stackoverflow.com/a/52405269
+        web_driver.execute_script("arguments[0].click();", page.link)
+        page_text = web_driver.find_element(By.XPATH, value="/html/body").text
+        for keyword_pattern in page.keyword_patterns:
+            match_found = re.search(keyword_pattern, page_text)
+            if not match_found:
+                keyword_pattern_not_found.append(keyword_pattern)
+
+        if pages_not_found or keyword_pattern_not_found:
+            raise Exception("Some elements could not be found")
 
 
 class RetroBlogTest(unittest.TestCase):
@@ -62,23 +87,18 @@ class RetroBlogTest(unittest.TestCase):
         current_path = pathlib.Path(__file__).parent.resolve()
         service = Service(executable_path=f"{current_path}/../bin/chromedriver")
         cls.driver = webdriver.Chrome(options=options, service=service)
-        cls.driver.get("https://tom1299.github.io/retro-blog/post/k8s-hardly-readable-configmap/")
 
     def testTestData(self):
         blog_posts: List[BlogPost] = RetroBlogTest.blog_posts
         assert blog_posts
         assert len(blog_posts) == 1
-        assert blog_posts[0].url_pattern == "kubectl edit command"
+        assert blog_posts[0].url == "https://tom1299.github.io/retro-blog/post/k8s-hardly-readable-configmap/"
+        assert blog_posts[0].pages[0].link_text_pattern == "kubectl edit command"
 
     def testTestLinks(self):
         for blog_post in RetroBlogTest.blog_posts:
-            page_text = get_page_as_text(blog_post, RetroBlogTest.driver)
-            for keyword_pattern in blog_post.keyword_patterns:
-                match_found = re.search(keyword_pattern, page_text)
-                if not match_found:
-                    raise Exception(f"Keyword pattern {keyword_pattern} not found")
+            verify_blog_post(blog_post, RetroBlogTest.driver)
 
     @classmethod
     def tearDownClass(cls):
         cls.driver.close()
-

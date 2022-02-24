@@ -1,9 +1,14 @@
 [
   {
-    "url_pattern": "kubectl edit command",
-    "keyword_patterns": [
-      "kubectl edit",
-      "KUBE_EDITOR"
+    "url": "https://tom1299.github.io/retro-blog/post/k8s-hardly-readable-configmap/",
+    "pages": [
+      {
+        "link_text_pattern": "kubectl edit command",
+        "keyword_patterns": [
+          "kubectl edit",
+          "KUBE_EDITOR"
+        ]
+      }
     ]
   }
 ]
