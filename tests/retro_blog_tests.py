@@ -1,6 +1,6 @@
 # pylint: disable=no-name-in-module
 """
-Contains tests for validating my blog
+Contains tests for validating the retro blog
 """
 import re
 import json
@@ -29,64 +29,108 @@ class BlogPost(BaseModel):
     pages: List[Page]
 
 
+class BlogPostTestResult:
+
+    def __init__(self, url: str):
+        self.url = url
+        self.pages_not_found: List[Page] = []
+        self.keywords_not_found: {str, List[str]} = {}
+
+    def has_errors(self):
+        return self.pages_not_found or self.keywords_not_found
+
+    def get_errors(self) -> List[str]:
+        if not self.has_errors():
+            return None
+
+        errors: List[str] = []
+        for page_not_found in self.pages_not_found:
+            errors.append(f"Linked page for keyword \"{page_not_found.link_text_pattern}\" not found ")
+        for link, keyword_not_found in self.keywords_not_found:
+            errors.append(f"Keywords \"{keyword_not_found}\" not found on page linked with text \"{link}\"")
+
+        return errors
+
+    def add_not_found(self, page: Page) -> None:
+        self.pages_not_found.append(page)
+
+    def add_keyword_not_found(self, keyword: str, page: Page) -> None:
+        keywords_not_found = []
+        if page.link_text_pattern in self.keywords_not_found:
+            keywords_not_found = self.keywords_not_found[page.link_text_pattern]
+        keywords_not_found.append(keyword)
+        self.keywords_not_found = keywords_not_found
+
+
 class BlogPostTester:
-    blog_post: BlogPost
-    page_content: str
 
-    def find_keywords(self):
-        patterns_not_found: List[str]
-        for pattern in self.blog_post.keyword_patterns:
-            match_found = re.search(pattern, self.page_content)
-            if not match_found:
-                patterns_not_found.append(pattern)
-        return patterns_not_found
+    def __init__(self, blog_post: BlogPost, web_driver: WebDriver):
+        self.blog_post = blog_post
+        self.blog_post_test_result: BlogPostTestResult = BlogPostTestResult(blog_post.url)
+        self.web_driver = web_driver
+        self.pages_found: List[Page] = []
 
+    def verify_blog_post(self) -> BlogPostTestResult:
+        self.web_driver.get(self.blog_post.url)
+        for page in self.blog_post.pages:
+            self.get_link(page)
 
-def verify_blog_post(blog_post: BlogPost, web_driver: WebDriver):
-    web_driver.get(blog_post.url)
-    pages_found: List[Page] = []
-    pages_not_found: List[Page] = []
-    for page in blog_post.pages:
-        link = web_driver.find_element(By.LINK_TEXT, value=page.link_text_pattern)
+        for page in self.pages_found:
+            self.verify_page(page)
+
+        return self.blog_post_test_result
+
+    def get_link(self, page):
+        link = self.web_driver.find_element(By.LINK_TEXT, value=page.link_text_pattern)
         if not link:
-            pages_not_found[page]
+            self.blog_post_test_result.add_not_found(page)
         else:
             page.link = link
-            pages_found.append(page)
+            self.pages_found.append(page)
 
-    keyword_pattern_not_found: List[str] = []
-    for page in pages_found:
+    def verify_page(self, page):
         # click() might not work. See https://stackoverflow.com/a/52405269
-        web_driver.execute_script("arguments[0].click();", page.link)
-        page_text = web_driver.find_element(By.XPATH, value="/html/body").text
+        self.web_driver.execute_script("arguments[0].click();", page.link)
+        page_text = self.web_driver.find_element(By.XPATH, value="/html/body").text
         for keyword_pattern in page.keyword_patterns:
-            match_found = re.search(keyword_pattern, page_text)
-            if not match_found:
-                keyword_pattern_not_found.append(keyword_pattern)
+            self.verify_keyword(keyword_pattern, page, page_text)
 
-        if pages_not_found or keyword_pattern_not_found:
-            raise Exception("Some elements could not be found")
+    def verify_keyword(self, keyword_pattern, page, page_text):
+        match_found = re.search(keyword_pattern, page_text)
+        if not match_found:
+            self.blog_post_test_result.add_keyword_not_found(keyword_pattern, page)
 
 
 class RetroBlogTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.blog_posts = [BlogPost]
-        current_path = pathlib.Path(__file__).parent.resolve()
-        with open(f"{current_path}/../test_data.json") as test_data_file:
-            blog_post_test_data_list = json.load(test_data_file)
-            for blog_post_data in blog_post_test_data_list:
-                blog_post = BlogPost(**blog_post_data)
-                cls.blog_posts.append(blog_post)
-        # Remove model metaclass added by pydantic
-        cls.blog_posts.pop(0)
+        cls.load_blogs()
+        cls.create_web_driver()
 
+    @classmethod
+    def create_web_driver(cls):
         options = Options()
         options.add_argument("--headless")
         current_path = pathlib.Path(__file__).parent.resolve()
         service = Service(executable_path=f"{current_path}/../bin/chromedriver")
         cls.driver = webdriver.Chrome(options=options, service=service)
+
+    @classmethod
+    def load_blogs(cls):
+        test_data_file_name = "test_data.json"
+        cls.blog_posts = cls.load_test_data(test_data_file_name)
+
+    @classmethod
+    def load_test_data(cls, test_data_file_name):
+        blog_posts: List[BlogPost] = []
+        current_path = pathlib.Path(__file__).parent.resolve()
+        with open(f"{current_path}/../{test_data_file_name}") as test_data_file:
+            blog_post_test_data_list = json.load(test_data_file)
+            for blog_post_data in blog_post_test_data_list:
+                blog_post = BlogPost(**blog_post_data)
+                blog_posts.append(blog_post)
+        return blog_posts
 
     def testTestData(self):
         blog_posts: List[BlogPost] = RetroBlogTest.blog_posts
@@ -95,9 +139,11 @@ class RetroBlogTest(unittest.TestCase):
         assert blog_posts[0].url == "https://tom1299.github.io/retro-blog/post/k8s-hardly-readable-configmap/"
         assert blog_posts[0].pages[0].link_text_pattern == "kubectl edit command"
 
-    def testTestLinks(self):
+    def testLinks(self):
         for blog_post in RetroBlogTest.blog_posts:
-            verify_blog_post(blog_post, RetroBlogTest.driver)
+            blog_post_tester = BlogPostTester(blog_post, RetroBlogTest.driver)
+            test_result = blog_post_tester.verify_blog_post()
+            assert not test_result.has_errors()
 
     @classmethod
     def tearDownClass(cls):
