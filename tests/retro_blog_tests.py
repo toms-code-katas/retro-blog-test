@@ -12,6 +12,7 @@ from selenium.webdriver.remote.webdriver import WebDriver, WebElement
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
 
 
@@ -71,26 +72,35 @@ class BlogPostTester:
         self.pages_found: List[Page] = []
 
     def verify_blog_post(self) -> BlogPostTestResult:
-        self.web_driver.get(self.blog_post.url)
         for page in self.blog_post.pages:
-            self.get_link(page)
-
-        for page in self.pages_found:
             self.verify_page(page)
 
         return self.blog_post_test_result
 
-    def get_link(self, page):
-        link = self.web_driver.find_element(By.LINK_TEXT, value=page.link_text_pattern)
-        if not link:
-            self.blog_post_test_result.add_not_found(page)
-        else:
-            page.link = link
-            self.pages_found.append(page)
+    def get_link(self, page: Page) -> WebElement:
+        link: WebElement = None
+
+        print(f"Searching for href with text {page.link_text_pattern}")
+
+        try:
+            link = self.web_driver.find_element(By.LINK_TEXT, value=page.link_text_pattern)
+        except NoSuchElementException:
+            # Fallback if can not be found directly
+            all_links: List[WebElement] = self.web_driver.find_element(By.XPATH, "//a[@href]")
+            for alink in all_links:
+                if re.search(page.link_text_pattern, alink.text):
+                    link = alink
+        return link
 
     def verify_page(self, page):
+        self.web_driver.get(self.blog_post.url)
+        link = self.get_link(page)
+        if not link:
+            self.blog_post_test_result.add_not_found(page)
+            return
+
         # click() might not work. See https://stackoverflow.com/a/52405269
-        self.web_driver.execute_script("arguments[0].click();", page.link)
+        self.web_driver.execute_script("arguments[0].click();", link)
         page_text = self.web_driver.find_element(By.XPATH, value="/html/body").text
         for keyword_pattern in page.keyword_patterns:
             self.verify_keyword(keyword_pattern, page, page_text)

@@ -8,6 +8,18 @@
           "kubectl edit",
           "KUBE_EDITOR"
         ]
+      },
+      {
+        "link_text_pattern": "config maps",
+        "keyword_patterns": [
+          "A ConfigMap is an API object"
+        ]
+      },
+      {
+        "link_text_pattern": "Grafana dashboard’s json",
+        "keyword_patterns": [
+          "Dashboard JSON model"
+        ]
       }
     ]
   }
