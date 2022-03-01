@@ -20,6 +20,13 @@
         "keyword_patterns": [
           "Dashboard JSON model"
         ]
+      },
+      {
+        "link_text_pattern": "post on stackoverflow",
+        "keyword_patterns": [
+          "instead of a newline",
+          "removing trailing whitespaces"
+        ]
       }
     ]
   }
