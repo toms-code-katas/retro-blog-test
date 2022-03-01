@@ -145,7 +145,7 @@ class RetroBlogTest(unittest.TestCase):
     def testTestData(self):
         blog_posts: List[BlogPost] = RetroBlogTest.blog_posts
         assert blog_posts
-        assert len(blog_posts) == 1
+        assert len(blog_posts) == 2
         assert blog_posts[0].url == "https://tom1299.github.io/retro-blog/post/k8s-hardly-readable-configmap/"
         assert blog_posts[0].pages[0].link_text_pattern == "kubectl edit command"
 

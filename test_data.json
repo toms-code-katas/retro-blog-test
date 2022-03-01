@@ -29,5 +29,114 @@
         ]
       }
     ]
+  },
+  {
+    "url": "https://tom1299.github.io/retro-blog/post/prometheus-test-alerts/",
+    "pages": [
+      {
+        "link_text_pattern": "Prometheus Operator",
+        "keyword_patterns": [
+          "Prometheus Operator"
+        ]
+      },
+      {
+        "link_text_pattern": "Alerting rules",
+        "keyword_patterns": [
+          "Defining alerting rules"
+        ]
+      },
+      {
+        "link_text_pattern": "Alertmanager configuration",
+        "keyword_patterns": [
+          "Alertmanager is configured via command-line flags"
+        ]
+      },
+      {
+        "link_text_pattern": "Custom Resources",
+        "keyword_patterns": [
+          "Custom resources are extensions of the Kubernetes API"
+        ]
+      },
+      {
+        "link_text_pattern": "Webhooks",
+        "keyword_patterns": [
+          "Jeff Lindsay"
+        ]
+      },
+      {
+        "link_text_pattern": "http server",
+        "keyword_patterns": [
+          "classes for implementing HTTP servers"
+        ]
+      },
+      {
+        "link_text_pattern": "GitOps",
+        "keyword_patterns": [
+          "What is GitOps"
+        ]
+      },
+      {
+        "link_text_pattern": "ELK",
+        "keyword_patterns": [
+          "Elasticsearch",
+          "Logstash",
+          "Kibana"
+        ]
+      },
+      {
+        "link_text_pattern": "Helm’s condition fields",
+        "keyword_patterns": [
+          "dependencies"
+        ]
+      },
+      {
+        "link_text_pattern": "Vector",
+        "keyword_patterns": [
+          "observability",
+          "tool"
+        ]
+      },
+      {
+        "link_text_pattern": "Service",
+        "keyword_patterns": [
+          "Kubernetes",
+          "Expose",
+          "Pods"
+        ]
+      },
+      {
+        "link_text_pattern": "Network Policy",
+        "keyword_patterns": [
+          "Kubernetes",
+          "Isolation"
+        ]
+      },
+      {
+        "link_text_pattern": "Coding Katas",
+        "keyword_patterns": [
+          "toms-code-katas"
+        ]
+      },
+      {
+        "link_text_pattern": "fixtures",
+        "keyword_patterns": [
+          "preconditions"
+        ]
+      },
+      {
+        "link_text_pattern": "multiprocessing module",
+        "keyword_patterns": [
+          "processes",
+          "multiprocessing"
+        ]
+      },
+      {
+        "link_text_pattern": "setUp and tearDown hooks",
+        "keyword_patterns": [
+          "setUpClass",
+          "tearDownClass"
+        ]
+      }
+    ]
   }
 ]
