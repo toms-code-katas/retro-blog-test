@@ -74,7 +74,6 @@ class BlogPostTester:
     def verify_blog_post(self) -> BlogPostTestResult:
         for page in self.blog_post.pages:
             self.verify_page(page)
-
         return self.blog_post_test_result
 
     def get_link(self, page: Page) -> WebElement:
