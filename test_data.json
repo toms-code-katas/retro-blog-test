@@ -1,5 +1,6 @@
 [
   {
+    "name": "k8s-hardly-readable-configmap",
     "url": "https://tom1299.github.io/retro-blog/post/k8s-hardly-readable-configmap/",
     "pages": [
       {
@@ -31,6 +32,7 @@
     ]
   },
   {
+    "name": "prometheus-test-alerts",
     "url": "https://tom1299.github.io/retro-blog/post/prometheus-test-alerts/",
     "pages": [
       {

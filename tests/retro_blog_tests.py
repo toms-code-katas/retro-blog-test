@@ -17,15 +17,12 @@ from selenium import webdriver
 
 
 class Page(BaseModel):
-    class Config:
-        arbitrary_types_allowed = True
-
     link_text_pattern: str
     keyword_patterns: List[str]
-    link: WebElement = None
 
 
 class BlogPost(BaseModel):
+    name: str
     url: str
     pages: List[Page]
 
@@ -42,7 +39,7 @@ class BlogPostTestResult:
 
     def get_errors(self) -> List[str]:
         if not self.has_errors():
-            return None
+            return []
 
         errors: List[str] = []
         for page_not_found in self.pages_not_found:
@@ -114,7 +111,6 @@ class RetroBlogTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.load_blogs()
         cls.create_web_driver()
 
     @classmethod
@@ -126,34 +122,30 @@ class RetroBlogTest(unittest.TestCase):
         cls.driver = webdriver.Chrome(options=options, service=service)
 
     @classmethod
-    def load_blogs(cls):
-        test_data_file_name = "test_data.json"
-        cls.blog_posts = cls.load_test_data(test_data_file_name)
-
-    @classmethod
-    def load_test_data(cls, test_data_file_name):
-        blog_posts: List[BlogPost] = []
-        current_path = pathlib.Path(__file__).parent.resolve()
-        with open(f"{current_path}/../{test_data_file_name}") as test_data_file:
-            blog_post_test_data_list = json.load(test_data_file)
-            for blog_post_data in blog_post_test_data_list:
-                blog_post = BlogPost(**blog_post_data)
-                blog_posts.append(blog_post)
-        return blog_posts
-
-    def testTestData(self):
-        blog_posts: List[BlogPost] = RetroBlogTest.blog_posts
-        assert blog_posts
-        assert len(blog_posts) == 2
-        assert blog_posts[0].url == "https://tom1299.github.io/retro-blog/post/k8s-hardly-readable-configmap/"
-        assert blog_posts[0].pages[0].link_text_pattern == "kubectl edit command"
-
-    def testLinks(self):
-        for blog_post in RetroBlogTest.blog_posts:
-            blog_post_tester = BlogPostTester(blog_post, RetroBlogTest.driver)
-            test_result = blog_post_tester.verify_blog_post()
-            assert not test_result.has_errors()
-
-    @classmethod
     def tearDownClass(cls):
         cls.driver.close()
+
+
+def load_test_data():
+    blog_posts: List[BlogPost] = []
+    current_path = pathlib.Path(__file__).parent.resolve()
+    with open(f"{current_path}/../test_data.json") as test_data_file:
+        blog_post_test_data_list = json.load(test_data_file)
+        for blog_post_data in blog_post_test_data_list:
+            blog_post = BlogPost(**blog_post_data)
+            blog_posts.append(blog_post)
+    return blog_posts
+
+
+def add_test(cls, post: BlogPost):
+    def inner_add_test(self):
+        blog_post_tester = BlogPostTester(post, RetroBlogTest.driver)
+        test_result = blog_post_tester.verify_blog_post()
+        assert not test_result.has_errors()
+
+    inner_add_test.__name__ = f"test-{post.name}"
+    setattr(cls, inner_add_test.__name__, inner_add_test)
+
+
+for blog_post in load_test_data():
+    add_test(RetroBlogTest, blog_post)
