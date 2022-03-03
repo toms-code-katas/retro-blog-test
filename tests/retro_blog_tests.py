@@ -132,19 +132,18 @@ def load_test_data():
     with open(f"{current_path}/../test_data.json") as test_data_file:
         blog_post_test_data_list = json.load(test_data_file)
         for blog_post_data in blog_post_test_data_list:
-            blog_post = BlogPost(**blog_post_data)
-            blog_posts.append(blog_post)
+            blog_posts.append(BlogPost(**blog_post_data))
     return blog_posts
 
 
 def add_test(cls, post: BlogPost):
-    def inner_add_test(self):
+    def blog_pots_test_method(self):
         blog_post_tester = BlogPostTester(post, RetroBlogTest.driver)
         test_result = blog_post_tester.verify_blog_post()
         assert not test_result.has_errors()
 
-    inner_add_test.__name__ = f"test-{post.name}"
-    setattr(cls, inner_add_test.__name__, inner_add_test)
+    blog_pots_test_method.__name__ = f"test-{post.name}"
+    setattr(cls, blog_pots_test_method.__name__, blog_pots_test_method)
 
 
 for blog_post in load_test_data():
