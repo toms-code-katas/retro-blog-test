@@ -1,4 +1,16 @@
 [
+    {
+    "name": "python-selenium-testing",
+    "url": "https://tom1299.github.io/retro-blog/post/python-selenium-testing/",
+    "pages": [
+      {
+        "link_text_pattern": "Martin Fowler",
+        "keyword_patterns": [
+          "Thoughtworks"
+        ]
+      }
+    ]
+  },
   {
     "name": "k8s-hardly-readable-configmap",
     "url": "https://tom1299.github.io/retro-blog/post/k8s-hardly-readable-configmap/",
