@@ -1,5 +1,5 @@
 [
-    {
+  {
     "name": "python-selenium-testing",
     "url": "https://tom1299.github.io/retro-blog/post/python-selenium-testing/",
     "pages": [
@@ -149,6 +149,18 @@
         "keyword_patterns": [
           "setUpClass",
           "tearDownClass"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "entry-page",
+    "url": "https://tom1299.github.io/retro-blog",
+    "pages": [
+      {
+        "link_text_pattern": "ABOUT.EXE",
+        "keyword_patterns": [
+          "File not found"
         ]
       }
     ]

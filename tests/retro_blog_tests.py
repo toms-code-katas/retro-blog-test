@@ -82,10 +82,14 @@ class BlogPostTester:
             link = self.web_driver.find_element(By.LINK_TEXT, value=page.link_text_pattern)
         except NoSuchElementException:
             # Fallback if can not be found directly
-            all_links: List[WebElement] = self.web_driver.find_element(By.XPATH, "//a[@href]")
+            all_links: List[WebElement] = self.web_driver.find_elements(By.XPATH, "//a[@href]")
             for alink in all_links:
                 if re.search(page.link_text_pattern, alink.text):
                     link = alink
+                    break
+                elif re.search(page.link_text_pattern, alink.accessible_name):
+                    link = alink
+                    break
         return link
 
     def verify_page(self, page):
