@@ -164,5 +164,19 @@
         ]
       }
     ]
+  },
+  {
+    "name": "add-methods-to-class-gist",
+    "url": "https://gist.github.com/tom1299/a4377e3e9c9a0ac2a5171d00c52a3bc3",
+    "pages": [
+      {
+        "link_text_pattern": "Raw",
+        "keyword_patterns": [
+          "greetingsMary",
+          "greetingsJohn",
+          "greetingsJoe"
+        ]
+      }
+    ]
   }
 ]
