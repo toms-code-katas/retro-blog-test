@@ -1,6 +1,9 @@
 name: Test Retroblog
 
-on: [push]
+on:
+  - push
+  - schedule:
+    - cron: '0 4 * * *'
 
 jobs:
   Lint-and-Test:
