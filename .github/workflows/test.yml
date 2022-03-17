@@ -1,8 +1,8 @@
 name: Test Retroblog
 
 on:
-  - push
-  - schedule:
+  push
+  schedule:
     - cron: '0 4 * * *'
 
 jobs:
