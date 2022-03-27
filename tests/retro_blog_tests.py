@@ -2,6 +2,7 @@
 """
 Contains tests for validating the retro blog
 """
+from __future__ import annotations
 import re
 import json
 import pathlib
@@ -14,20 +15,18 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
+from typing import Optional
 
 
 class Page(BaseModel):
-    link_text_pattern: str
-    keyword_patterns: List[str]
+    name: Optional[str]
+    url: Optional[str]
+    link_text_pattern: Optional[str]
+    keyword_patterns: Optional[List[str]]
+    pages: Optional[List[Page]]
 
 
-class BlogPost(BaseModel):
-    name: str
-    url: str
-    pages: List[Page]
-
-
-class BlogPostTestResult:
+class PageTestResult:
 
     def __init__(self, url: str):
         self.url = url
@@ -60,18 +59,18 @@ class BlogPostTestResult:
         self.keywords_not_found = keywords_not_found
 
 
-class BlogPostTester:
+class PageTester:
 
-    def __init__(self, blog_post: BlogPost, web_driver: WebDriver):
-        self.blog_post = blog_post
-        self.blog_post_test_result: BlogPostTestResult = BlogPostTestResult(blog_post.url)
+    def __init__(self, page: Page, web_driver: WebDriver):
+        self.page = page
+        self.page_test_result: PageTestResult = PageTestResult(page.url)
         self.web_driver = web_driver
         self.pages_found: List[Page] = []
 
-    def verify_blog_post(self) -> BlogPostTestResult:
-        for page in self.blog_post.pages:
+    def verify_all_pages(self) -> PageTestResult:
+        for page in self.page.pages:
             self.verify_page(page)
-        return self.blog_post_test_result
+        return self.page_test_result
 
     def get_link(self, page: Page) -> WebElement:
         link: WebElement = None
@@ -93,10 +92,10 @@ class BlogPostTester:
         return link
 
     def verify_page(self, page):
-        self.web_driver.get(self.blog_post.url)
+        self.web_driver.get(self.page.url)
         link = self.get_link(page)
         if not link:
-            self.blog_post_test_result.add_not_found(page)
+            self.page_test_result.add_not_found(page)
             return
 
         # click() might not work. See https://stackoverflow.com/a/52405269
@@ -108,10 +107,10 @@ class BlogPostTester:
     def verify_keyword(self, keyword_pattern, page, page_text):
         match_found = re.search(keyword_pattern, page_text)
         if not match_found:
-            self.blog_post_test_result.add_keyword_not_found(keyword_pattern, page)
+            self.page_test_result.add_keyword_not_found(keyword_pattern, page)
 
 
-class RetroBlogTest(unittest.TestCase):
+class PageTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -131,24 +130,24 @@ class RetroBlogTest(unittest.TestCase):
 
 
 def load_test_data():
-    blog_posts: List[BlogPost] = []
+    pages: List[Page] = []
     current_path = pathlib.Path(__file__).parent.resolve()
     with open(f"{current_path}/../test_data.json") as test_data_file:
-        blog_post_test_data_list = json.load(test_data_file)
-        for blog_post_data in blog_post_test_data_list:
-            blog_posts.append(BlogPost(**blog_post_data))
-    return blog_posts
+        page_test_data_list = json.load(test_data_file)
+        for page_data in page_test_data_list:
+            pages.append(Page(**page_data))
+    return pages
 
 
-def add_test(cls, post: BlogPost):
-    def blog_pots_test_method(self):
-        blog_post_tester = BlogPostTester(post, RetroBlogTest.driver)
-        test_result = blog_post_tester.verify_blog_post()
+def add_test(cls, page: Page):
+    def page_test_method(self):
+        blog_post_tester = PageTester(page, PageTest.driver)
+        test_result = blog_post_tester.verify_all_pages()
         assert not test_result.has_errors()
 
-    blog_pots_test_method.__name__ = f"test-{post.name}"
-    setattr(cls, blog_pots_test_method.__name__, blog_pots_test_method)
+    page_test_method.__name__ = f"test-{page.name}"
+    setattr(cls, page_test_method.__name__, page_test_method)
 
 
 for blog_post in load_test_data():
-    add_test(RetroBlogTest, blog_post)
+    add_test(PageTest, blog_post)
