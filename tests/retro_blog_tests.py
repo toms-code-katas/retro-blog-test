@@ -2,7 +2,6 @@
 """
 Contains tests for validating the retro blog
 """
-from __future__ import annotations
 import re
 import json
 import pathlib
