@@ -7,8 +7,19 @@
         "link_text_pattern": "Martin Fowler",
         "keyword_patterns": [
           "Thoughtworks"
+        ],
+        "pages": [
+          {
+            "link_text_pattern": "Disclosures",
+            "keyword_patterns": [
+              "my books"
+            ]
+          }
         ]
       }
+    ],
+    "keyword_patterns": [
+      "SELENIUM"
     ]
   },
   {
