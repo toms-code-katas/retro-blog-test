@@ -20,7 +20,7 @@ jobs:
           mkdir bin
           cd bin
           sudo apt install -y curl unzip build-essential python3
-          curl --output chromedriver.zip https://chromedriver.storage.googleapis.com/100.0.4896.75/chromedriver_linux64.zip
+          curl --output chromedriver.zip https://chromedriver.storage.googleapis.com/100.0.4896.20/chromedriver_linux64.zip
           unzip chromedriver.zip
           rm chromedriver.zip
       - name: Pylint
