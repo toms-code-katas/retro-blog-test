@@ -2,6 +2,7 @@
 """
 Contains tests for validating the retro blog
 """
+from __future__ import annotations
 import re
 import json
 import pathlib
@@ -14,20 +15,18 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
+from typing import Optional
 
 
 class Page(BaseModel):
-    link_text_pattern: str
-    keyword_patterns: List[str]
+    name: Optional[str]
+    url: Optional[str]
+    link_text_pattern: Optional[str]
+    keyword_patterns: Optional[List[str]]
+    pages: Optional[List[Page]]
 
 
-class BlogPost(BaseModel):
-    name: str
-    url: str
-    pages: List[Page]
-
-
-class BlogPostTestResult:
+class PageTestResult:
 
     def __init__(self, url: str):
         self.url = url
@@ -43,9 +42,10 @@ class BlogPostTestResult:
 
         errors: List[str] = []
         for page_not_found in self.pages_not_found:
-            errors.append(f"Linked page for keyword \"{page_not_found.link_text_pattern}\" not found ")
-        for link, keyword_not_found in self.keywords_not_found:
-            errors.append(f"Keywords \"{keyword_not_found}\" not found on page linked with text \"{link}\"")
+            errors.append(f"Linked page for keyword \""
+                          f"{page_not_found.link_text_pattern}\" not found ")
+        for keyword_not_found in self.keywords_not_found:
+            errors.append(f"Keywords \"{keyword_not_found}\" not found")
 
         return errors
 
@@ -60,20 +60,28 @@ class BlogPostTestResult:
         self.keywords_not_found = keywords_not_found
 
 
-class BlogPostTester:
+class PageTester:
 
-    def __init__(self, blog_post: BlogPost, web_driver: WebDriver):
-        self.blog_post = blog_post
-        self.blog_post_test_result: BlogPostTestResult = BlogPostTestResult(blog_post.url)
+    def __init__(self, page: Page, web_driver: WebDriver):
+        self.page = page
+        self.page_test_result: PageTestResult = PageTestResult(page.url)
         self.web_driver = web_driver
         self.pages_found: List[Page] = []
 
-    def verify_blog_post(self) -> BlogPostTestResult:
-        for page in self.blog_post.pages:
-            self.verify_page(page)
-        return self.blog_post_test_result
+    def verify_all_pages(self) -> List[PageTestResult]:
+        self.verify_page(self.page)
+        all_results = [self.page_test_result]
+        if self.page.pages:
+            for page in self.page.pages:
+                if not page.url:
+                    self.web_driver.get(self.page.url)
+                    url = self.get_link_url(page)
+                    page.url = url
+                page_tester = PageTester(page, self.web_driver)
+                all_results.extend(page_tester.verify_all_pages())
+        return all_results
 
-    def get_link(self, page: Page) -> WebElement:
+    def get_link_url(self, page: Page) -> str:
         link: WebElement = None
 
         print(f"Searching for href with text {page.link_text_pattern}")
@@ -81,37 +89,34 @@ class BlogPostTester:
         try:
             link = self.web_driver.find_element(By.LINK_TEXT, value=page.link_text_pattern)
         except NoSuchElementException:
-            # Fallback if can not be found directly
+            # Fallback if the link can not be found directly
             all_links: List[WebElement] = self.web_driver.find_elements(By.XPATH, "//a[@href]")
             for alink in all_links:
                 if re.search(page.link_text_pattern, alink.text):
                     link = alink
                     break
-                elif re.search(page.link_text_pattern, alink.accessible_name):
+                if re.search(page.link_text_pattern, alink.accessible_name):
                     link = alink
                     break
-        return link
+
+        return link.get_attribute('href')
 
     def verify_page(self, page):
-        self.web_driver.get(self.blog_post.url)
-        link = self.get_link(page)
-        if not link:
-            self.blog_post_test_result.add_not_found(page)
-            return
-
-        # click() might not work. See https://stackoverflow.com/a/52405269
-        self.web_driver.execute_script("arguments[0].click();", link)
+        self.web_driver.get(self.page.url)
         page_text = self.web_driver.find_element(By.XPATH, value="/html/body").text
+        if not page.keyword_patterns:
+            return
         for keyword_pattern in page.keyword_patterns:
             self.verify_keyword(keyword_pattern, page, page_text)
 
     def verify_keyword(self, keyword_pattern, page, page_text):
         match_found = re.search(keyword_pattern, page_text)
         if not match_found:
-            self.blog_post_test_result.add_keyword_not_found(keyword_pattern, page)
+            print(f"Did not find keyword '{keyword_pattern}' on {page.url}")
+            self.page_test_result.add_keyword_not_found(keyword_pattern, page)
 
 
-class RetroBlogTest(unittest.TestCase):
+class PageTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -131,24 +136,31 @@ class RetroBlogTest(unittest.TestCase):
 
 
 def load_test_data():
-    blog_posts: List[BlogPost] = []
+    pages: List[Page] = []
     current_path = pathlib.Path(__file__).parent.resolve()
     with open(f"{current_path}/../test_data.json") as test_data_file:
-        blog_post_test_data_list = json.load(test_data_file)
-        for blog_post_data in blog_post_test_data_list:
-            blog_posts.append(BlogPost(**blog_post_data))
-    return blog_posts
+        page_test_data_list = json.load(test_data_file)
+        for page_data in page_test_data_list:
+            pages.append(Page(**page_data))
+    return pages
 
 
-def add_test(cls, post: BlogPost):
-    def blog_pots_test_method(self):
-        blog_post_tester = BlogPostTester(post, RetroBlogTest.driver)
-        test_result = blog_post_tester.verify_blog_post()
-        assert not test_result.has_errors()
+def add_test(cls, page: Page):
+    def page_test_method(self):
+        blog_post_tester = PageTester(page, PageTest.driver)
+        test_results = blog_post_tester.verify_all_pages()
+        at_least_one_error = False
+        for result in test_results:
+            if result.has_errors():
+                print(f"Page {result.url} had errors: {result.get_errors()} ")
+                at_least_one_error = True
+            else:
+                print(f"Page {result.url} had no errors")
+        assert not at_least_one_error
 
-    blog_pots_test_method.__name__ = f"test-{post.name}"
-    setattr(cls, blog_pots_test_method.__name__, blog_pots_test_method)
+    page_test_method.__name__ = f"test-{page.name}"
+    setattr(cls, page_test_method.__name__, page_test_method)
 
 
 for blog_post in load_test_data():
-    add_test(RetroBlogTest, blog_post)
+    add_test(PageTest, blog_post)
