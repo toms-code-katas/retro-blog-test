@@ -40,7 +40,7 @@
         ]
       },
       {
-        "link_text_pattern": "Grafana dashboard’s json",
+        "link_text_pattern": "Grafana dashboard's json",
         "keyword_patterns": [
           "Dashboard JSON model"
         ]
@@ -109,7 +109,7 @@
         ]
       },
       {
-        "link_text_pattern": "Helm’s condition fields",
+        "link_text_pattern": "Helm's condition fields",
         "keyword_patterns": [
           "dependencies"
         ]
